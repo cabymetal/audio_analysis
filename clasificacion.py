@@ -2,19 +2,24 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import librosa.display as plt_dis
+import soundfile as sf
 import librosa
+import math
 import os
 import sys
+from sklearn.preprocessing import normalize
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 import pdb
 
 class Song(object):
 	"""clase encargada de obtener características de un archivo de canción"""
 	def __init__(self, path:str, sample_rate:int = 44100)->None:
-		super(Song, self).__init__()
 		self.path = path
 		self.sr = sample_rate
-		self.data= librosa.load(self.path, sr = self.sr)
-		self.create_spectogram_image()
+		#self.data= librosa.load(self.path, sr = self.sr)
+		#self.create_spectogram_image()
 
 
 	def get_name(self) -> str:
@@ -43,6 +48,44 @@ class Song(object):
 		del fig
 		del ax
 
+	def get_section_from_audio(self, audio_data, sr, seconds = 15):
+		dur = math.ceil(librosa.get_duration(y=audio_data, sr=sr))
+		steps = (dur // seconds) - 1
+		section = len(audio_data) // steps
+		for i in range(steps):
+			yield audio_data[section*i: section*(i+1)], f'part_{i}'
+
+	def create_spectogram_image_section(self,song_path, audio_data):
+		spectogram_path = f'{song_path[:-4]}.png'
+		if os.path.exists(song_path):
+			return spectogram_path
+		#fig, ax = plt.subplots(figsize=(8,8))
+		#spectogram_matrix = librosa.amplitude_to_db(np.abs(librosa.stft(audio_data)), ref=np.max)
+		#colormesh = plt_dis.specshow(spectogram_matrix ,y_axis='log', x_axis='time', sr=self.sr, cmap='inferno', ax=ax)
+		#plt.savefig(spectogram_path)
+
+	def get_path_to_section(self, song_name, part):
+		song_prefix, extension = song_name[:-4], song_name[-4:] #remove the .wav ending
+		song_prefix = song_prefix.replace(".", '')
+		new_song_name = f'{self.path}{song_prefix}_{part}.{extension}'
+		new_song_spectogram_path = f'./assets/spectograms/{song_prefix}_{part}.png'
+		if os.path.exists(new_song_name):
+			return f'{song_prefix}_{part}.{extension}', new_song_spectogram_path 
+
+		section_data, sr = librosa.load(f'{self.path}{song_name}', sr = self.sr)
+		for i, x in self.get_section_from_audio(section_data, self.sr):
+			if x == part:
+				audio_section = i
+				break
+
+		
+		spectogram_path = self.create_spectogram_image_section(new_song_spectogram_path, audio_section)
+		sf.write(new_song_name, audio_section, self.sr)
+		return new_song_name, spectogram_path
+
+
+
+
 class DataSongs(object):
 
 	def get_initial_metadata(self, row):
@@ -58,6 +101,58 @@ class DataSongs(object):
 		df = pd.DataFrame(data = {'path': [path] * len(songs),'nombre': songs})
 		df[['duration', 'tempo', 'zero_crossing_rate']] = df.apply(self.get_initial_metadata, axis=1, result_type='expand')
 		return df
+
+
+class DataProcessing(object):
+	def __init__(self, dataset_path):
+		df = pd.read_csv(dataset_path, delimiter=';')
+		df_clas = df.iloc[:, 2:-6]
+		df_clas.set_index([df_clas.index, 'filename', 'part'], inplace=True)
+		columns = ['amplitude_envelope', 'rmse', 'zero_crossing_rate', 'spectral_centroid']
+		mfcc_cols = [f'mfcc{x+1}' for x in range(13)]
+		columns = columns + mfcc_cols
+		self.df_clas = df_clas.loc[:, columns]
+		self.df_clas = self.normalize_data()
+		self.fit_class_model()
+
+
+	def normalize_data(self):
+		df_clas = pd.DataFrame(
+			normalize(
+				self.df_clas, axis=0
+			), columns=self.df_clas.columns, index=self.df_clas.index
+			).drop_duplicates()
+		return df_clas
+
+	def fit_class_model(self, k=4):
+		self.model = KMeans(n_clusters=k)
+		self.fitted_model = self.model.fit(self.df_clas)
+		self.yhat = self.model.predict(self.df_clas)
+
+		centers = self.model.cluster_centers_
+		self.centers = pd.DataFrame(centers)
+		self.centers.columns = self.df_clas.columns
+
+	def reduce_variables_pca(self):
+		pca = PCA(n_components=2)
+
+		reduced_data = pca.fit_transform(self.df_clas)
+		reduced_data = pd.DataFrame(reduced_data, columns=['x', 'y'])
+		reduced_data['yhat'] = self.yhat
+		reduced_data['yhat'] = reduced_data['yhat'].astype('category')
+		reduced_data['f'] = self.df_clas.reset_index([1])['filename'].tolist()
+		reduced_data['f'] = reduced_data['f'].astype('category')
+		reduced_data['p'] = self.df_clas.reset_index([2])['part'].tolist()
+		reduced_data['p'] = reduced_data['p'].astype('category')
+
+		# apply the same for centers
+		reduced_centers = pca.fit_transform(self.centers)
+		reduced_centers = pd.DataFrame(reduced_centers, columns=['x', 'y'])
+
+		return (reduced_data, reduced_centers)
+
+
+
 
 
 

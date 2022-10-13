@@ -7,3 +7,5 @@
 /spectogram_image
 /assets/spectograms
 .tmp.driveupload/
+.venv/
+.tmp.drivedownload/

@@ -1,5 +1,7 @@
 from dash import Dash, dcc
-from dash.dependencies import Input, Output
+import dash_auth
+from dash.dependencies import Input, Output, State
+from clasificacion import Song
 import dash_bootstrap_components as dbc
 import layout
 import urllib.parse
@@ -37,29 +39,60 @@ external_scripts = [{
 
 ]
 
+VALID_USERNAME_PASSWORD_PAIRS = {
+    'proyecto_clasificacion' : 'eafit2022'
+}
+
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.themes.LUX], external_scripts=external_scripts,
   suppress_callback_exceptions=True, title = 'app music', update_title='Cargando...')
 
+auth = dash_auth.BasicAuth(
+    app,
+    VALID_USERNAME_PASSWORD_PAIRS
+)
+
+server = app.server
 app.layout = layout.get_layout()
 
 
 ##### CALLBACKS #####
 
 @app.callback(
-	[Output('audio_player', 'src'),  Output('title-song', 'children'), Output('image-song', 'src')],
-	Input('scatter_graph', 'clickData')
+	[Output('audio_player', 'src'), Output('title-song', 'children'), Output('image-song', 'src'),
+	Output('audio_player_1', 'src'), Output('audio_player_2', 'src'), Output('scatter_nclicks', 'children'),
+	Output('title-song-1', 'children'), Output('title-song-2', 'children'),
+	Output('image-song-1', 'src'), Output('image-song-2', 'src')],
+	Input('scatter_graph', 'clickData'), State('scatter_nclicks', 'children'), State('audio_player_1', 'src'), State('audio_player_2', 'src'),
+	State('title-song-1', 'children'), State('title-song-2', 'children'), State('image-song-1', 'src'), State('image-song-2', 'src')
 )
-def refresh_audio_player(clickData):
-	path = '/assets/Audio/'
-	path_image='/assets/spectograms/'
+def refresh_audio_player(clickData, n_clicks, src1, src2, tit1, tit2, isrc1, isrc2):
+	path = 'assets/Audio/'
+	path_image='assets/spectograms/'
+
 	if not clickData:
-		return [path + 'Death on the Balcony - Tempt Of Fate.wav', 'Death on the Balcony - Tempt Of Fate.wav', 
-			path_image + 'Death on the Balcony - Tempt Of Fate.png']
+		return [path + 'Death on the Balcony - Tempt Of Fate.wav', 'Death on the Balcony - Tempt Of Fate.wav',
+			path_image + 'Death on the Balcony - Tempt Of Fate.png','','', 0, tit1, tit2, isrc1, isrc2]
 
+	song = Song(path)
+	song_name, part = clickData['points'][0]['customdata'][3], clickData['points'][0]['customdata'][4]
+	song_section_name, spectogram_section = song.get_path_to_section(song_name, part)
+	# machete para nombres raros de canciones
+	tmp_song_name = clickData['points'][0]['customdata'][3][:-4].replace('.', '')+'.png'
+	n_clicks = int(n_clicks)
+	n_clicks = n_clicks + 1
+	ret_value = []
+	if (n_clicks % 2) != 0:
+		# para el input 1
+		ret_value = [path + clickData['points'][0]['customdata'][3], clickData['points'][0]['customdata'][3],
+		path_image + tmp_song_name , song_section_name, src2, n_clicks,
+		f"{song_name} {part}", tit2 , spectogram_section, isrc2]
+	else:
+		# para el input 2
+		ret_value = [path + clickData['points'][0]['customdata'][3], clickData['points'][0]['customdata'][3],
+		path_image + tmp_song_name, src1, song_section_name, n_clicks,
+		tit1, f"{song_name} {part}", isrc1, spectogram_section]
 
-
-	return [path + clickData['points'][0]['customdata'][0], clickData['points'][0]['customdata'][0],
-		path_image + clickData['points'][0]['customdata'][0][:-3] + 'PNG' ]
+	return ret_value
 
 if __name__ == '__main__':
 	app.run_server(host='localhost', debug=True)
