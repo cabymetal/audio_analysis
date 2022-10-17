@@ -5,6 +5,8 @@ import pandas as pd
 import grapher
 from clasificacion import DataSongs
 from clasificacion import DataProcessing
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import label_binarize
 
 #leer data
 m = DataSongs()
@@ -13,11 +15,15 @@ path = './assets/Audio/'
 df = pd.read_csv('tmp_data.csv')
 model_obj = DataProcessing('./out_dataset_1.csv')
 red_df, red_cen = model_obj.reduce_variables_pca()
+song_name = 'Death on the Balcony - Tempt Of Fate.wav'
+mindur, maxdur, songdur, cluster, df_data = model_obj.read_all_data(song_name)
+df_original, labels, explainer, shap_values = model_obj.shapley_force_data()
+graph_obj = grapher.GraphData(df, 'nombre', 'duration', 'tempo', 'zero_crossing_rate')
 #instanciar gráfias
-fig_graph = grapher.GraphData(df, 'nombre', 'duration', 'tempo', 'zero_crossing_rate').draw_figure()
-clas_graph = grapher.GraphData(df, 'nombre', 'duration', 'tempo', 'zero_crossing_rate').draw_scatter_classification(red_df, red_cen)
-
-
+fig_graph = graph_obj.draw_figure()
+clas_graph = graph_obj.draw_scatter_classification(red_df, red_cen)
+ind_graph = graph_obj.draw_indicator_info(mindur, maxdur, songdur, cluster, song_name)
+force_graph = graph_obj.draw_shap_cluster_beeswarm(0, df_original, labels)
 
 def get_layout():
 	layout = html.Div(children=[
@@ -30,52 +36,54 @@ def get_layout():
 		    ''')
 			]),
 			html.Hr(),html.Br(),
+			#caracteristicas generales de la canción
+			dbc.Row([
+				html.H4("Características generales de la canción"),
+				dbc.Col([dcc.Graph(id='inicators-graph', figure=ind_graph)], width=8),
+				dbc.Col([dcc.Graph(id='force-graph', figure = force_graph)], width=4)
+			]),
+			html.Hr(),html.Br(),
 			dbc.Row([
 				dbc.Col([dcc.Graph(id='scatter_graph', figure=clas_graph), html.P(id="scatter_nclicks", children="0", hidden=True)], width=8),
-				dbc.Col([
-					dbc.Row(html.Div(
-			    	className = 'audio_section_title',
-			    	children=['''
-			    				        Canción completa:
-			    				      ''', html.Span(id='title-song', children='', className="fs-6")])
-					),
-					html.Br(),
-					dbc.Row(
-						html.Audio(id='audio_player',
-			    		controls=True,
-			    		children=["Tu explorador no soporta audio"]
-			    	)
-					),
-					html.Hr(),
-					html.Br(),
-					dbc.Row(html.Div(
-			    	className = 'audio_section_title',
-			    	children=[html.P(children= ['Sección: ']),
-			    				     html.P(id='title-song-1', children='', className="fs-6")])
-					),
-					html.Br(),
-					dbc.Row(
-						html.Audio(id='audio_player_1',
-			    		controls=True,
-			    		children=["Tu explorador no soporta audio"]
-			    	)
-					),
-					html.Hr(),
-					html.Br(),
-					dbc.Row(html.Div(
-			    	className = 'audio_section_title',
-			    	children=[html.P(children= ['Sección: ']),
-			    				    html.P(id='title-song-2', children='', className="fs-6")])
-					),
-					html.Br(),
-					dbc.Row(
-						html.Audio(id='audio_player_2',
-			    		controls=True,
-			    		children=["Tu explorador no soporta audio"]
-			    	)
-					),
-				], width=4),
-
+				dbc.Col([html.Div(id='shap_force_graph', children=[])], width=4),
+			]),
+			dbc.Row([
+				
+				dbc.Col(html.Div(
+		    	className = 'audio_section_title',
+		    	children=[html.P(children= ['Sección: ']),
+		    				     html.P(id='title-song', children='', className="fs-6"),
+		    				     html.Audio(id='audio_player',
+								    		controls=True,
+								    		children=["Tu explorador no soporta audio"]
+								    	)
+		    				    ])
+				),	
+				dbc.Col(html.Div(
+		    	className = 'audio_section_title',
+		    	children=[html.P(children= ['Sección: ']),
+		    				    html.P(id='title-song-1', children='', className="fs-6"),
+		    				    dbc.Col(
+											html.Audio(id='audio_player_1',
+								    		controls=True,
+								    		children=["Tu explorador no soporta audio"]
+								    	)
+										)
+										])
+				),
+				dbc.Col(html.Div(
+		    	className = 'audio_section_title',
+		    	children=[html.P(children= ['Sección: ']),
+		    				    html.P(id='title-song-2', children='', className="fs-6"),
+		    				    dbc.Col(
+											html.Audio(id='audio_player_2',
+								    		controls=True,
+								    		children=["Tu explorador no soporta audio"]
+								    	)
+										)
+									 ])
+				),
+				
 			]),
 			html.Hr(),
 			html.Br(),

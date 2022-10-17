@@ -11,6 +11,9 @@ from sklearn.preprocessing import normalize
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import label_binarize
+import shap
 import pdb
 
 class Song(object):
@@ -114,6 +117,10 @@ class DataProcessing(object):
 		self.df_clas = df_clas.loc[:, columns]
 		self.df_clas = self.normalize_data()
 		self.fit_class_model()
+		self.df_summary = self.df_clas.copy()
+		self.df_summary['label'] = self.yhat
+		self.df_summary = self.get_summary_data(self.df_summary)
+		
 
 
 	def normalize_data(self):
@@ -150,6 +157,44 @@ class DataProcessing(object):
 		reduced_centers = pd.DataFrame(reduced_centers, columns=['x', 'y'])
 
 		return (reduced_data, reduced_centers)
+
+	def get_duration(self, song_name) -> float:
+		audio_data, sr = librosa.load(song_name, sr=44100)
+		duration = librosa.get_duration(y=audio_data, sr=sr)
+		return duration
+
+	def get_summary_data(self, df):
+		df = df.groupby(['filename'])['label'].agg(lambda x: x.value_counts().index[0]).reset_index()
+		df['duration'] = df['filename'].apply(lambda x: self.get_duration('assets/Audio/' + x))
+		return df
+	
+	def read_all_data(self, song_name):
+		df = pd.read_csv('out_dataset_1.csv', delimiter=';')
+		df2 = self.df_summary.copy()
+		mindur, maxdur = df2['duration'].min(), df2['duration'].max()
+		cluster = df2.loc[df2['filename'] == song_name, 'label'].values[0]
+		songdur = df2.loc[df2['filename'] == song_name, 'duration'].values[0]
+		df = df.loc[df['filename'] == song_name, :]
+
+		return mindur, maxdur, songdur, cluster, df
+
+	def shapley_force_data (self):
+		columns = ['amplitude_envelope', 'rmse', 'zero_crossing_rate', 'spectral_centroid']
+		mfcc_cols = [f'mfcc{x+1}' for x in range(13)]
+		columns = columns + mfcc_cols
+		clas_result = self.fitted_model.labels_ #resultado de la calsificación 'yhat'
+		clas_result = label_binarize(clas_result, classes=[0,1,2,3])
+		df = pd.read_csv('./out_dataset_1.csv', delimiter=';') #data original antes de escalar
+		df_clas_original = df.iloc[:, 2:-6]
+		df_clas_original = df_clas_original.loc[:, columns].drop_duplicates()
+		clf=RandomForestClassifier(max_depth=4)
+		clf.fit(df_clas_original,clas_result)
+		explainer= shap.TreeExplainer(clf)
+		shap_values = explainer(df_clas_original)
+
+		return df_clas_original, clas_result, explainer, shap_values
+
+
 
 
 
