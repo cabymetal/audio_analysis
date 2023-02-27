@@ -14,6 +14,7 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import label_binarize
 import shap
+import urllib.parse
 import pdb
 
 class Song(object):
@@ -45,7 +46,7 @@ class Song(object):
 		data_length = int(len(self.data[0])/1.9)
 		spectogram_matrix = librosa.amplitude_to_db(np.abs(librosa.stft(self.data[0][0:data_length])), ref=np.max)
 		colormesh = plt_dis.specshow(spectogram_matrix ,y_axis='linear', x_axis='time', sr=self.sr, cmap='inferno', ax=ax)
-		plt.savefig(f'assets/spectograms/{self.get_name()[:-3].replace(".", "")}.png')
+		plt.savefig(f'assets/spectograms/{self.get_name()[:-3].replace(".", "")}.jpg')
 		plt.clf()
 		plt.close('all')
 		del fig
@@ -58,22 +59,22 @@ class Song(object):
 		for i in range(steps):
 			yield audio_data[section*i: section*(i+1)], f'part_{i}'
 
-	def create_spectogram_image_section(self,song_path, audio_data):
-		spectogram_path = f'{song_path[:-4]}.png'
+	def create_spectogram_image_section(self, song_path, audio_data):
+		spectogram_path = f'{song_path[:-4]}.jpg'
 		if os.path.exists(song_path):
 			return spectogram_path
-		#fig, ax = plt.subplots(figsize=(8,8))
-		#spectogram_matrix = librosa.amplitude_to_db(np.abs(librosa.stft(audio_data)), ref=np.max)
-		#colormesh = plt_dis.specshow(spectogram_matrix ,y_axis='log', x_axis='time', sr=self.sr, cmap='inferno', ax=ax)
-		#plt.savefig(spectogram_path)
+		fig, ax = plt.subplots(figsize=(8,8))
+		spectogram_matrix = librosa.amplitude_to_db(np.abs(librosa.stft(audio_data)), ref=np.max)
+		colormesh = plt_dis.specshow(spectogram_matrix ,y_axis='log', x_axis='time', sr=self.sr, cmap='inferno', ax=ax)
+		plt.savefig(spectogram_path)
 
 	def get_path_to_section(self, song_name, part):
 		song_prefix, extension = song_name[:-4], song_name[-4:] #remove the .wav ending
 		song_prefix = song_prefix.replace(".", '')
-		new_song_name = f'{self.path}{song_prefix}_{part}.{extension}'
-		new_song_spectogram_path = f'./assets/spectograms/{song_prefix}_{part}.png'
+		new_song_name = f'{self.path}{song_prefix}_{part}{extension}'
+		new_song_spectogram_path = f'./assets/spectograms/{song_prefix}_{part}.jpg'
 		if os.path.exists(new_song_name):
-			return f'{song_prefix}_{part}.{extension}', new_song_spectogram_path 
+			return urllib.parse.quote(new_song_name), urllib.parse.quote(new_song_spectogram_path)
 
 		section_data, sr = librosa.load(f'{self.path}{song_name}', sr = self.sr)
 		for i, x in self.get_section_from_audio(section_data, self.sr):
@@ -84,7 +85,7 @@ class Song(object):
 		
 		spectogram_path = self.create_spectogram_image_section(new_song_spectogram_path, audio_section)
 		sf.write(new_song_name, audio_section, self.sr)
-		return new_song_name, spectogram_path
+		return new_song_name, urllib.parse.quote(spectogram_path) 
 
 
 
@@ -115,8 +116,11 @@ class DataProcessing(object):
 		mfcc_cols = [f'mfcc{x+1}' for x in range(13)]
 		columns = columns + mfcc_cols
 		self.df_clas = df_clas.loc[:, columns]
+		self.df_clas_without_norm = df_clas.loc[:, columns].copy()
 		self.df_clas = self.normalize_data()
 		self.fit_class_model()
+		self.df_clas_helper = self.df_clas.copy()
+		self.df_clas_helper['label'] = self.yhat
 		self.df_summary = self.df_clas.copy()
 		self.df_summary['label'] = self.yhat
 		self.df_summary = self.get_summary_data(self.df_summary)
@@ -198,14 +202,6 @@ class DataProcessing(object):
 
 
 
-
-
-
-
-if __name__ == '__main__':
-	m = DataSongs()
-	path = '.\\Victor\\Victor'
-	df = m.create_data_frame_from_path(path)
 
 
 

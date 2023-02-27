@@ -9,3 +9,6 @@
 .tmp.driveupload/
 .venv/
 .tmp.drivedownload/
+/assets/analysis_spectograms
+/assets/audio_section
+/assets/imagenes
