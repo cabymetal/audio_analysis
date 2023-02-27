@@ -262,15 +262,14 @@ def get_third_row_to_compare():
         
       dbc.Col(children=
         [ 
-          html.P(children= ['Sección: ']),
+          html.P(children= ['Canción Completa: ']),
           html.P(id='title-song', children='', className="fs-6 title-song-1"),
           html.Audio(id='audio_player',className="audio-section",
             controls=True,
             src="",
             children=["Tu explorador no soporta audio"]
           )
-        ]
-        
+        ],        
       ),
       dbc.Col( children= 
         [
@@ -294,9 +293,10 @@ def get_third_row_to_compare():
         )
         ],
         id='song-content-2',
-        className="",
+        className=""
       ) 
-    ])
+    ],
+    style={'height': '200px'})
   return html_response
 
 def get_fourth_row_to_compare():

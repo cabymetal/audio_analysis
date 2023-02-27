@@ -48,13 +48,13 @@
     height: 525px;
 }
 .card-header{
-    background-color: #d6e87f;
+    background-color: #010054;
     border-radius: 20px 20px 0px 0px;
     border: 0px solid;
 }
 
 .card-body{
-    background: linear-gradient(0deg, #fbf8c0, transparent);
+    background: linear-gradient(0deg, #0072c6, transparent);
 }
 
 .card{
@@ -66,12 +66,13 @@
 }
 
 .table .thead-dark th{
-    background-color: #4bbf73;
-    border-color: #4bbf73;
+    background-color: #0072c6;
+    border-color: #0072c6;
 }
 
 h5{
     padding-top: 1em;
+    color: white;
 }
 
 body {
@@ -133,7 +134,7 @@ a, a:hover, a:focus {
 #sidebar {
     min-width: 250px;
     max-width: 250px;
-    background: #26b685;
+    background: #afd3ed;
     color: #fff;
     transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665);
     transform-origin: bottom left;
@@ -146,12 +147,12 @@ a, a:hover, a:focus {
 
 #sidebar .sidebar-header {
     padding: 20px;
-    background: #26b685;
+    background: #0072c6;
 }
 
 #sidebar .sidebar-footer{
     padding: 20px;
-    background: #26b685;
+    background: #afd3ed;
     position: fixed;
     bottom: 0;
     min-width: 250px;
@@ -161,7 +162,7 @@ a, a:hover, a:focus {
 
 #sidebar ul.components {
     padding: 20px 0;
-    border-bottom: 1px solid #26b685;
+    border-bottom: 1px solid #5f95cf;
 }
 
 #sidebar ul p {
@@ -181,7 +182,7 @@ a, a:hover, a:focus {
 
 #sidebar ul li.active > a, a[aria-expanded="true"] {
     color: #fff;
-    background: #26b685;
+    background: #005a9d;
 }
 
 
@@ -200,7 +201,7 @@ a[data-toggle="collapse"] {
 ul ul a {
     font-size: 0.9em !important;
     padding-left: 30px !important;
-    background: #d8de71;
+    background: #0274cb;
 }
 
 ul.CTAs {
@@ -366,5 +367,5 @@ th.dash-header-column {
 }
 
 .song-active{
-    background-color: burlywood;
+    background-color: #afd3ed;
 }

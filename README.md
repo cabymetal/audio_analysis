@@ -52,6 +52,23 @@ si todo va bien se muestra la siguiente imagen
 abrir un explorador en localhost:8050 y veremos la siguiente página web con el tablero de control
 ![Tablero de control](assets/imagenes/dashboard.PNG)
 
+## Proceso de despliegue aws
+primero se realiza una pequeña limpieza del bucket con el siguiente script
+```Python
+import boto3
+s3 = boto3.resource('s3')
+bucket_name = 'mybucketnamehere'
+bucket = s3.Bucket(bucket_name)
+
+for obj in bucket.objects.all():
+    if '..' in obj or 'png' in obj:
+        print(obj.key)
+        s3.Object(obj.bucket_name, obj.key).delete()
+```
+
+
+
+
 ### Análisis exploratorio de datos
 
 Definir y escribir proceso...
