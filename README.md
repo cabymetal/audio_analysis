@@ -66,19 +66,18 @@ for obj in bucket.objects.all():
         s3.Object(obj.bucket_name, obj.key).delete()
 ```
 luego sincronizo la carpeta actual para subir sus contenidos a s3 corro el siguiente comando en consola
-```cmd
+```
  aws s3 sync . s3://bucket_name/FlaskApp
 ```
 
 para llevar los archivos a EC2 se ingresa a la consola de aws y se abre la instancia
 conectarse a la instancia
-``` cmd
-
+```
 ~Desktop/Document> ssh -i "pc_key_pair.pem" ubuntu@ec2-ip-aws-aqui.compute-1.amazonaws.com
 ```
 en la instancia hay una carpeta flask_app y reemplazar los archivos que se encuentren en
 esta con los archivos que se publicaron en el bucket de s3
-```cmd
+```
  aws s3 sync s3://bucket_name/FlaskApp .
 ```
 

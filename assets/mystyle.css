@@ -77,8 +77,8 @@ h5{
 
 body {
     font-family: 'Poppins', sans-serif;
-    background: linear-gradient(to bottom, rgba(255,255,255,0) -15%,
-              rgba(255,255,255,1)), url('background-header.png');
+    /*background: linear-gradient(to bottom, rgba(255,255,255,0) -15%,
+              rgba(255,255,255,1)), url('background-header.png');*/
     background-repeat: no-repeat;
     background-size: 100% 127px;
 }
