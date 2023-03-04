@@ -14,7 +14,7 @@ para clonar el repositorio
 </code>
 </p>
 
-descargarlo presionar en el botón descargar
+descargarlo presionar en el botón descargar <br>
 ![Descargar proyecto](assets/imagenes/download.PNG)
 
 copiar canciones a analizar en la carpeta assets/Audio/ estoy trabajando con la muestra de canciones del repositorio compartido
@@ -46,10 +46,10 @@ Ejecutar el proyecto
 </code>
 </p>
 
-si todo va bien se muestra la siguiente imagen
+si todo va bien se muestra la siguiente imagen <br>
 ![tablero en ejecucion](assets/imagenes/running_process.PNG)
 
-abrir un explorador en localhost:8050 y veremos la siguiente página web con el tablero de control
+abrir un explorador en localhost:8050 y veremos la siguiente página web con el tablero de control<br>
 ![Tablero de control](assets/imagenes/dashboard.PNG)
 
 ## Proceso de despliegue aws
@@ -65,11 +65,35 @@ for obj in bucket.objects.all():
         print(obj.key)
         s3.Object(obj.bucket_name, obj.key).delete()
 ```
+luego sincronizo la carpeta actual para subir sus contenidos a s3 corro el siguiente comando en consola
+```cmd
+ aws s3 sync . s3://bucket_name/FlaskApp
+```
 
+para llevar los archivos a EC2 se ingresa a la consola de aws y se abre la instancia
+conectarse a la instancia
+``` cmd
 
+~Desktop/Document> ssh -i "pc_key_pair.pem" ubuntu@ec2-ip-aws-aqui.compute-1.amazonaws.com
+```
+en la instancia hay una carpeta flask_app y reemplazar los archivos que se encuentren en
+esta con los archivos que se publicaron en el bucket de s3
+```cmd
+ aws s3 sync s3://bucket_name/FlaskApp .
+```
+
+En la instancia existen dos procesos ya configurados previamente uno es un servidor `Nginx` y el otro es un servidor `gunicorn`,
+se puede ver un paso a paso de instalación en este link ![Instalación Nginx Gunicorn](https://medium.com/techfront/step-by-step-visual-guide-on-deploying-a-flask-application-on-aws-ec2-8e3e8b82c4f7)
+
+para verificar que se encuentren activos podemos ejecutar
+```systemctl status nginx```
+y 
+```systemctl status flask_app```
+respectivamente, si ambos se encuentran activos se puede acceder al tablero en internet en la dirección ip pública
 
 
 ### Análisis exploratorio de datos
 
-Definir y escribir proceso...
+Revisar los jupyter notebook del repositorio. en el cual se establece la metodología de selección de características
+para variables clásicas como un aproximación utilizando un modelo Preentrenado, usando redes neuronales.
 

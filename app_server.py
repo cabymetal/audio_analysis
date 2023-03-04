@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html
+from dash import Dash, dcc, html, dash_table
 import dash
 import dash_auth
 from dash.dependencies import Input, Output, State, ClientsideFunction, ALL, MATCH
@@ -6,10 +6,8 @@ from dash.exceptions import PreventUpdate
 from clasificacion import Song
 import dash_bootstrap_components as dbc
 import layout as lout
-import urllib.parse
 import shap
-import dateutil.parser
-import pdb
+import pandas as pd
 
 ############################# create app ########################################################
 
@@ -74,14 +72,15 @@ def update_classname(n_clicks):
 @app.callback(Output('content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-  if pathname=='/':
-    return lout.get_home_layout()
-  elif pathname=='/total':
-    return lout.get_total_layout(graph, data)
-  elif pathname=='/detailed':
-
-    return lout.get_detailed_layout(data)
-  pass
+	if pathname=='/':
+		return lout.get_readme_markdown()
+	elif pathname=='/variables_clasicas':
+		return lout.get_home_layout()
+	elif pathname=='/redes_neuronales':
+		return lout.get_neural_network_page()
+	elif pathname=='/resumen':
+		return lout.summary_methods_kmeans()
+	pass
 
 
 ##### CALLBACKS #####
@@ -216,12 +215,6 @@ def refresh_audio_player(clickData, n_clicks, src1, src2, tit1, tit2, isrc1, isr
 	song = Song(path)
 	song_name, part = clickData['points'][0]['customdata'][3], clickData['points'][0]['customdata'][4]
 	song_section_name, spectogram_section = song.get_path_to_section(song_name, part)
-	# rehacer graficas de indicadores 
-	# mindur, maxdur, songdur, cluster, df_data = lout.model_obj.read_all_data(song_name)
-	# graph = lout.graph_obj.draw_indicator_info(mindur, maxdur, songdur, cluster, song_name)
-	# rehacer graficas de fuerza
-	# k, df_original, labels = clickData['points'][0]['customdata'][2], lout.df_original, lout.labels
-	# force_graph = lout.graph_obj.draw_shap_cluster_beeswarm(k, df_original, labels)
 
 	# machete para nombres raros de canciones
 	tmp_song_name = clickData['points'][0]['customdata'][3][:-4].replace('.', '')+'.jpg'
@@ -259,6 +252,115 @@ def _force_plot_html(*args):
     shap_html = f"<head>{shap.getjs()}</head><body>{force_plot.html()}</body>"
     return html.Iframe(srcDoc=shap_html,
                        style={"width": "100%", "height": "200px", "border": 0})
+
+@app.callback(
+	[Output('graph-scatterpolar', 'figure'), Output('cluster-titles', 'children'),
+	 Output('cluster-shap', 'children'),  Output('cluster-activation', 'children')],
+	Input('button_refresh_neural', 'n_clicks'),
+	State('mean-or-median-toogle', 'value'), State('checklist-cluster-neural', 'value'),
+	prevent_initial_call=True
+)
+def update_neural_page(clickData, meantoogle, clusterlist):
+	list_clusters = [ int(x) for x in clusterlist]
+	tmp = lout.data.df_centers.iloc[list_clusters, :]
+	fig1 = lout.graph_obj.create_scatterpolar(tmp)
+	
+	return [fig1, lout.get_row_of_cluster_titles(clusterlist),
+		lout.get_row_of_shap_figures(clusterlist),
+		lout.get_row_of_clasification_graph(clusterlist, meantoogle)]
+
+@app.callback(
+	Output('graph-bar-neural', 'figure'), Output('tabs-content-audio-neural', 'children'), 
+	Output('scatter_graph_neural', 'figure'), Input('button-refresh-neural', 'n_clicks'), 
+	State('dropdown-songs-neural', 'value'), State('dropdown-part-original', 'value'), 
+	prevent_initial_call=True
+)
+def update_neural_graphs_page(clickData, songs, parts):
+	aux_cen = lout.data.reduced_centers.copy()
+	aux_dat = lout.data.reduced_data.copy()
+	aux = lout.data.df_feats.reset_index().copy()
+
+	if isinstance(songs, str):
+		songs = [songs]
+	if isinstance(parts, str):
+		parts = [parts]
+	
+	fig_bar = lout.graph_obj.create_bar_chart_neural(aux, songs, parts)
+	audio_bar = lout.get_audio_controls(songs, parts)
+	if songs == None:
+		scatter = lout.graph_obj.create_neural_point_distribution(
+																aux_dat, aux_cen)
+	else:
+		if parts == None:
+			scatter = lout.graph_obj.create_neural_point_distribution(
+			aux_dat.loc[aux_dat['f'].isin(songs), :], 
+			aux_cen)
+		else:
+			scatter = lout.graph_obj.create_neural_point_distribution(
+			aux_dat.loc[(aux_dat['f'].isin(songs)) & aux_dat['part'].isin(parts), :], 
+			aux_cen)
+
+	return fig_bar, audio_bar, scatter
+
+@app.callback(
+	Output('summary-section-song', 'children'),
+	Input('scatter_graph_neural', 'clickData'),
+	prevent_initial_call=True
+
+)
+def create_summary_info_from_section(clickData):
+	aux = lout.data.df_feats.reset_index()
+	song_name, part = clickData['points'][0]['customdata'][3], clickData['points'][0]['customdata'][6]
+	title = [html.H3(song_name),html.Br(),html.H5(part), "- Generalidades de la seccion"]
+	tmp = aux.loc[(aux['filename']== song_name) & (aux['part']==part), :].copy()
+	mode_df = tmp.groupby(['filename', 'part'])['cluster'].agg(pd.Series.mode).reset_index()
+	table = dash_table.DataTable(
+                      mode_df.to_dict('records'),
+                      [{"name": i, "id": i} for i in mode_df.columns],
+                      style_data={
+                          'color': 'black',
+                          'backgroundColor': 'white'
+                      },
+                      style_data_conditional=[
+                          {
+                              'if': {'row_index': 'odd'},
+                              'backgroundColor': 'rgb(220, 220, 220)',
+                          }
+                      ],
+                    )
+	
+	audio_html = lout.get_audio_controls([song_name], [part])
+	
+	ret_list = title + [table] + audio_html
+	return ret_list
+
+@app.callback(
+	Output('song-part-to-compare', 'children'), Output('song-part-to-compare', 'style'),
+	Input('table-summary', 'active_cell'),
+	prevent_initial_call=True
+)
+def update_song_part_in_summary(click_data_table):
+	path = 'assets/Audio/'
+	if click_data_table:
+		row, col, col_name = click_data_table['row'], click_data_table['column'], click_data_table['column_id']
+		tmp = lout.model_obj.df_clas_without_norm.reset_index().copy()
+		song_name = tmp['filename'].iat[row]
+		part = tmp['part'].iat[row]
+		song = Song(path)
+		song_section_name, _ = song.get_path_to_section(song_name, part)
+		ret_value = [ 
+          html.P(children= ['Segmento Seleccionado: ', song_name]),
+          html.P(children= part , className="fs-6 title-song-1"),
+          html.Audio(className="audio-section",
+            controls=True,
+            src=song_section_name,
+            children=["Tu explorador no soporta audio"]
+          )
+		]
+		return ret_value, {'height':'150px'}
+	else:
+		return "", {}
+
 
 if __name__ == '__main__':
 	app.run_server(host='localhost', debug=True) #local

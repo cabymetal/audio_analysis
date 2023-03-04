@@ -136,7 +136,7 @@ class DataProcessing(object):
 		return df_clas
 
 	def fit_class_model(self, k=4):
-		self.model = KMeans(n_clusters=k)
+		self.model = KMeans(n_clusters=k, random_state=42)
 		self.fitted_model = self.model.fit(self.df_clas)
 		self.yhat = self.model.predict(self.df_clas)
 
@@ -200,9 +200,53 @@ class DataProcessing(object):
 
 
 
+class DataNeuralNetwork(object):
+	def __init__(self, dataset_path_features, dataset_path_centers):
+		self.df_feats = pd.read_csv(dataset_path_features, delimiter=';')
+		self.df_centers = pd.read_csv(dataset_path_centers, delimiter=';')
+		self.df_feats.set_index(['filename', 'section', 'part'], inplace=True)
+		self.yhat = self.df_feats.cluster.values.tolist()
+		self.df_feats.drop(['cluster'], axis=1, inplace=True)
+		self.reduce_variables_pca()	
+		self.df_feats['cluster'] = self.yhat
+	
+	def reduce_variables_pca(self):
+		pca = PCA(n_components=2)
+		self.reduced_data = pca.fit_transform(self.df_feats)
+		self.reduced_data = pd.DataFrame(self.reduced_data, columns=['x', 'y'])
+		self.reduced_data['yhat'] = self.yhat
+		self.reduced_data['yhat'] = self.reduced_data['yhat'].astype('category')
+		self.reduced_data['f'] = self.df_feats.reset_index([0])['filename'].tolist()
+		self.reduced_data['f'] = self.reduced_data['f'].astype('category')
+		self.reduced_data['p'] = self.df_feats.reset_index([1])['section'].tolist()
+		self.reduced_data['p'] = self.reduced_data['p'].astype('category')
+		self.reduced_data['i'] = self.reduced_data.index.tolist()
+		self.reduced_data['i'] = self.reduced_data['i'].astype('category')
+		self.reduced_data['part'] = self.df_feats.reset_index([2])['part'].tolist()
+		self.reduced_data['part'] = self.reduced_data['part'].astype('category')
+		# apply the same for centers
+		self.reduced_centers = pca.fit_transform(self.df_centers)
+		self.reduced_centers = pd.DataFrame(self.reduced_centers, columns=['x', 'y'])
+	
+	def get_path_to_spectogram(self, cluster, filename, section=None, mean=True):
+		if section:
+			path = f"assets/analysis_spectograms/{cluster}/{filename}/{section}"
+		else:
+			if mean:
+				path = f"assets/analysis_spectograms/{cluster}/{filename}/activation_mean.jpg"
+			else:
+				path = f"assets/analysis_spectograms/{cluster}/{filename}/activation_median.jpg"
+		return path
+	
+	def get_path_to_audio(self, filename, section, part):
+		return f"assets/audio_section/{filename}/{part}_{section}.wav"
+		
 
 
+		
 
+
+	
 
 
 

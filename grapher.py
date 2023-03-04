@@ -168,3 +168,111 @@ class GraphData(object):
                       title=f'cantidad secciones en cluster por canción')
 
     return fig
+  
+  def create_scatterpolar(self, data):
+    df_centers = data.drop(['Unnamed: 0'], axis=1).copy()
+    categories = df_centers.columns
+    categories = [ x for i, x in enumerate(categories) if (i%3)==0 ]
+    fig = go.Figure()
+
+    for i in df_centers.index:
+      aux = df_centers.iloc[df_centers.index == i, :].values[0].tolist()
+      fig.add_trace(go.Scatterpolar(
+        r = aux,
+        theta = categories,
+        fill = 'toself',
+        name = str(i)
+      ))
+    
+    fig.update_layout(
+      polar=dict(
+        radialaxis=dict(
+          visible=True,
+          range=[0, 1]
+        )),
+      showlegend=True,
+      title= "Caracteristicas cluster"
+    )
+
+    return fig
+  
+  def create_neural_point_distribution(self, reduced_data, reduced_centers):
+    fig = go.Figure()
+    colors = {0: '#0044FF', 1:'#751017', 2:'#48a832', 3:'#6b1075'}
+    song_array = reduced_data['f'].unique()
+    for i, song in enumerate(song_array):
+        tmp = reduced_data.loc[reduced_data['f'] == song, :].copy()
+        tmp['color'] = tmp['yhat'].apply(lambda x: colors[x])
+        tmp_fig = go.Scatter(x=tmp['x'], y=tmp['y'], name=str(i), mode='markers', marker_color=tmp['color'],
+                            text=tmp['f'], customdata = tmp)
+        fig.add_trace(tmp_fig)
+
+    fig.update_traces(hovertemplate='<b>%{customdata[3]}</b><br>%{customdata[4]}--%{customdata[5]}--%{customdata[6]}<br>(%{x:.3f},%{y:.3f})<extra>%{customdata[2]}</extra>')
+    fig.update_layout(
+        legend=dict(
+            font=dict(
+                family="Courier",
+                size=10,
+                color="black"
+            ),
+            bgcolor="LightBlue",
+            bordercolor="Black",
+            borderwidth=1
+        ),
+        clickmode = "event+select",
+        xaxis_range=(reduced_data['x'].min()-0.1, reduced_data['x'].max()+0.1),
+        yaxis_range=(reduced_data['y'].min()-0.1, reduced_data['y'].max()+0.1),
+        title="Clasificación de secciones importantes de canciones"
+    )
+
+    fig.add_trace(go.Scatter(x=reduced_centers['x'], y=reduced_centers['y'], mode='markers',
+                            marker={'size':16, 'color':'black', 'opacity':0.6},
+                            line=dict(
+                                color='MediumPurple',
+                                width=2),
+                            showlegend=False)) #centroides
+    return fig
+
+  def create_bar_chart_neural(self, data, selected_songs , selected_parts= None):
+    data['level_0'] = data.index 
+    if selected_songs==None:
+      selected_songs = data['filename'].drop_duplicates().values.tolist()
+    if selected_parts:
+      tmp_df = data.loc[data['filename'].isin(selected_songs) & 
+                data['part'].isin(selected_parts), ['level_0', 'cluster', 'filename']]\
+                .groupby(['cluster','filename']).count().reset_index(level=1)
+    else:
+      tmp_df = data.loc[data['filename'].isin(selected_songs), ['level_0', 'cluster', 'filename']]\
+                .groupby(['cluster','filename']).count().reset_index(level=1)
+    
+    
+
+    clusters =['0', '1', '2', '3']
+    aux_clusters = pd.DataFrame(clusters)
+    
+    #primera cancion
+    aux_data = tmp_df.loc[tmp_df['filename'] == selected_songs[0], :].copy()
+    aux_data = aux_clusters.join(aux_data)
+    aux_data.fillna({'filename':selected_songs[0], 'level_0': 0}, inplace=True)
+
+    fig = go.Figure(go.Bar(x= clusters, 
+                           y= aux_data['level_0'],
+                           name= selected_songs[0][:17]+"...",
+                           showlegend=True)
+                    )
+    
+
+    if len(selected_songs) > 1:
+      for song in selected_songs[1:]:
+        aux_data = tmp_df.loc[tmp_df['filename'] == song, :].copy()
+        aux_data = aux_clusters.join(aux_data)
+        aux_data.fillna({'filename':song, 'label': 0}, inplace=True)
+        fig.add_trace(go.Bar(x= clusters, 
+                           y= aux_data['level_0'],
+                           name= song[:17]+"...",
+                           showlegend=True))
+    fig.update_layout(barmode='stack', xaxis={'categoryorder':'category ascending'},
+                      title=f'cantidad secciones en cluster por canción')
+
+    return fig
+  
