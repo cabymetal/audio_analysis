@@ -160,10 +160,10 @@ def get_control_for_dashboard_classic():
               html.Label("Seleccionar Secciones canción 1:", htmlFor="dropdown-part-original"), 
               controls['drop_part_original'] 
             ]),
-            html.Div(className="form-group-row", children=[
-              html.Label("selección Cluster (1):", htmlFor="checklist-cluster-original"), 
-              controls['check_cluster_original']
-            ]),
+            # html.Div(className="form-group-row", children=[
+            #  html.Label("selección Cluster (1):", htmlFor="checklist-cluster-original"), 
+            #  controls['check_cluster_original']
+            #]), # not used
             html.Button('Actualizar bloque 1', id='button-refresh-song1')
           ]
             
@@ -179,10 +179,10 @@ def get_control_for_dashboard_classic():
               html.Label("Seleccionar Secciones canción 2:", htmlFor="dropdown-part-compare"), 
               controls['drop_part_compare'] 
             ]),
-            html.Div(className="form-group-row", children=[
-              html.Label("selección Cluster (2):", htmlFor="checklist-cluster-compare"), 
-              controls['check_cluster_compare']
-            ]),
+            # html.Div(className="form-group-row", children=[
+            #  html.Label("selección Cluster (2):", htmlFor="checklist-cluster-compare"), 
+            #   controls['check_cluster_compare']
+            #]), # not used
             html.Button('Actualizar bloque 2', id='button-refresh-song2'),
           ] 
          ),
@@ -432,7 +432,7 @@ def get_row_of_cluster_titles(list_clusters):
     ], width=12/len(list_clusters))
     list_cols.append(col)
   
-  row_layout = dbc.Row( children=list_cols , id='cluster-titles')
+  row_layout = dbc.Row(dbc.Row( children=list_cols , id='cluster-titles'))
   return row_layout
 
 def get_row_of_clasification_graph(list_clusters, is_mean=False):

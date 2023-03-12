@@ -88,9 +88,9 @@ def display_page(pathname):
 @app.callback(
 	Output('graph-bar-cluster-1', 'figure'), Output('tabs-content-audio-1', 'children'), Output('tabs-table-audio-1', 'children'),
 	Input('button-refresh-song1', 'n_clicks'),
-	State('dropdown-songs-original', 'value'), State('dropdown-part-original', 'value'), State('checklist-cluster-original', 'value')
+	State('dropdown-songs-original', 'value'), State('dropdown-part-original', 'value')
 )
-def refresh_block_1(clickData, songs, parts, clusters):
+def refresh_block_1(clickData, songs, parts):
 	if not clickData:
 		raise dash.exceptions.PreventUpdate("cancel callback")
 	aux_df = lout.model_obj.df_clas_helper.reset_index().copy()
@@ -106,9 +106,9 @@ def refresh_block_1(clickData, songs, parts, clusters):
 @app.callback(
 	Output('graph-bar-cluster-2', 'figure'), Output('tabs-content-audio-2', 'children'), Output('tabs-table-audio-2', 'children'),
 	Input('button-refresh-song2', 'n_clicks'),
-	State('dropdown-songs-compare', 'value'), State('dropdown-part-compare', 'value'), State('checklist-cluster-compare', 'value')
+	State('dropdown-songs-compare', 'value'), State('dropdown-part-compare', 'value')
 )
-def refresh_block_2(clickData, songs, parts, clusters):
+def refresh_block_2(clickData, songs, parts):
 	if not clickData:
 		raise dash.exceptions.PreventUpdate("cancel callback")
 	aux_df = lout.model_obj.df_clas_helper.reset_index().copy()
@@ -124,9 +124,9 @@ def refresh_block_2(clickData, songs, parts, clusters):
 @app.callback(
 	Output('tbl-out-1', 'children'),
 	Input('table-1', 'active_cell'),
-	State('dropdown-songs-original', 'value'), State('dropdown-part-original', 'value'), State('checklist-cluster-original', 'value')
+	State('dropdown-songs-original', 'value'), State('dropdown-part-original', 'value')
 )
-def update_graphs_1(active_cell, songs, parts, clusters):
+def update_graphs_1(active_cell, songs, parts):
 	if isinstance(songs, str):
 		songs = [songs]
 	if isinstance(parts, str):
@@ -163,9 +163,9 @@ def update_graphs_1(active_cell, songs, parts, clusters):
 @app.callback(
 	Output('tbl-out-2', 'children'),
 	Input('table-2', 'active_cell'),
-	State('dropdown-songs-compare', 'value'), State('dropdown-part-compare', 'value'), State('checklist-cluster-compare', 'value')
+	State('dropdown-songs-compare', 'value'), State('dropdown-part-compare', 'value')
 )
-def update_graphs_2(active_cell, songs, parts, clusters):
+def update_graphs_2(active_cell, songs, parts):
 	if isinstance(songs, str):
 		songs = [songs]
 	if isinstance(parts, str):

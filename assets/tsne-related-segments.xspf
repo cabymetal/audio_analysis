@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist xmlns="http://xspf.org/ns/0/" xmlns:vlc="http://www.videolan.org/vlc/playlist/ns/0/" version="1">
+	<title>Lista de reproducción</title>
+	<trackList>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/Sade%20-%20Pearls%20(Timo%20Jahns%20Remix)/part_22_9.wav</location>
+			<duration>986</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>0</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/Sade%20-%20Pearls%20(Timo%20Jahns%20Remix)/part_22_10.wav</location>
+			<duration>986</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>1</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/Sade%20-%20Pearls%20(Timo%20Jahns%20Remix)/part_14_6.wav</location>
+			<duration>986</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>2</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/Sade%20-%20Pearls%20(Timo%20Jahns%20Remix)/part_18_2.wav</location>
+			<duration>986</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>3</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/Siopis%20ft%20Metrika%20-%20Linda%20(Lemos%20&amp;%20Pan%20Remix)/part_12_0.wav</location>
+			<duration>1009</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>4</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/Sade%20-%20Pearls%20(Timo%20Jahns%20Remix)/part_10_5.wav</location>
+			<duration>986</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>5</vlc:id>
+			</extension>
+		</track>
+	</trackList>
+	<extension application="http://www.videolan.org/vlc/playlist/0">
+		<vlc:item tid="0"/>
+		<vlc:item tid="1"/>
+		<vlc:item tid="2"/>
+		<vlc:item tid="3"/>
+		<vlc:item tid="4"/>
+		<vlc:item tid="5"/>
+	</extension>
+</playlist>

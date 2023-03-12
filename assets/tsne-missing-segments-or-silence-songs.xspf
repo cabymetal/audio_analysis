@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist xmlns="http://xspf.org/ns/0/" xmlns:vlc="http://www.videolan.org/vlc/playlist/ns/0/" version="1">
+	<title>Lista de reproducción</title>
+	<trackList>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/v_Full%20Intention%20-%20America%20(I%20Love%20America)%20(_Rude%20Dog_%20Mix)/part_20_10.wav</location>
+			<duration>993</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>0</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/v_Full%20Intention%20-%20America%20(I%20Love%20America)%20(_Rude%20Dog_%20Mix)/part_22_10.wav</location>
+			<duration>993</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>1</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/v_Full%20Intention%20-%20America%20(I%20Love%20America)%20(_Rude%20Dog_%20Mix)/part_22_3.wav</location>
+			<duration>993</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>2</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/v_Full%20Intention%20-%20America%20(I%20Love%20America)%20(Full%20Length%2012_%20Vocal%20Mix)/part_23_15.wav</location>
+			<duration>982</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>3</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/v_PSB%20-%20Before%20(8828366%20A3)/part_27_14.wav</location>
+			<duration>981</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>4</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///D:/Development/Python/proyecto_maestria/assets/audio_section/v_PSB%20-%20Before%20(8828366%20B1)/part_28_14.wav</location>
+			<duration>981</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>5</vlc:id>
+			</extension>
+		</track>
+	</trackList>
+	<extension application="http://www.videolan.org/vlc/playlist/0">
+		<vlc:item tid="0"/>
+		<vlc:item tid="1"/>
+		<vlc:item tid="2"/>
+		<vlc:item tid="3"/>
+		<vlc:item tid="4"/>
+		<vlc:item tid="5"/>
+	</extension>
+</playlist>
