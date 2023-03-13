@@ -100,7 +100,7 @@ def refresh_block_1(clickData, songs, parts):
 		parts = [parts]
 	figure = lout.graph_obj.create_bar_chart(aux_df, songs)
 	audio_html = lout.get_audio_controls(songs, parts)
-	table_html = lout.get_table_detailed(songs, parts, '2')
+	table_html = lout.get_table_detailed(songs, parts, '1')
 	return figure, audio_html, table_html
 
 @app.callback(
@@ -265,17 +265,17 @@ def update_neural_page(clickData, meantoogle, clusterlist):
 	tmp = lout.data.df_centers.iloc[list_clusters, :]
 	fig1 = lout.graph_obj.create_scatterpolar(tmp)
 	
-	return [fig1, lout.get_row_of_cluster_titles(clusterlist),
-		lout.get_row_of_shap_figures(clusterlist),
-		lout.get_row_of_clasification_graph(clusterlist, meantoogle)]
+	return [fig1, lout.get_row_of_cluster_titles(clusterlist, ret_only_list=True),
+		lout.get_row_of_shap_figures(clusterlist, ret_only_list=True),
+		lout.get_row_of_clasification_graph(clusterlist, meantoogle, ret_only_list=True)]
 
 @app.callback(
 	Output('graph-bar-neural', 'figure'), Output('tabs-content-audio-neural', 'children'), 
 	Output('scatter_graph_neural', 'figure'), Input('button-refresh-neural', 'n_clicks'), 
-	State('dropdown-songs-neural', 'value'), State('dropdown-part-original', 'value'), 
+	State('dropdown-songs-neural', 'value'), State('dropdown-part-original', 'value'), State('dropdown-section-original', 'value'), 
 	prevent_initial_call=True
 )
-def update_neural_graphs_page(clickData, songs, parts):
+def update_neural_graphs_page(clickData, songs, parts, sections):
 	aux_cen = lout.data.reduced_centers.copy()
 	aux_dat = lout.data.reduced_data.copy()
 	aux = lout.data.df_feats.reset_index().copy()
@@ -284,9 +284,11 @@ def update_neural_graphs_page(clickData, songs, parts):
 		songs = [songs]
 	if isinstance(parts, str):
 		parts = [parts]
+	if isinstance(sections, str):
+		sections = [sections]
 	
 	fig_bar = lout.graph_obj.create_bar_chart_neural(aux, songs, parts)
-	audio_bar = lout.get_audio_controls(songs, parts)
+	audio_bar = lout.get_audio_controls_for_sections(songs, parts, sections)
 	if songs == None:
 		scatter = lout.graph_obj.create_neural_point_distribution(
 																aux_dat, aux_cen)
@@ -310,10 +312,11 @@ def update_neural_graphs_page(clickData, songs, parts):
 )
 def create_summary_info_from_section(clickData):
 	aux = lout.data.df_feats.reset_index()
-	song_name, part = clickData['points'][0]['customdata'][3], clickData['points'][0]['customdata'][6]
+	song_name, part, section = clickData['points'][0]['customdata'][3], clickData['points'][0]['customdata'][6], clickData['points'][0]['customdata'][4]
 	title = [html.H3(song_name),html.Br(),html.H5(part), "- Generalidades de la seccion"]
 	tmp = aux.loc[(aux['filename']== song_name) & (aux['part']==part), :].copy()
 	mode_df = tmp.groupby(['filename', 'part'])['cluster'].agg(pd.Series.mode).reset_index()
+	mode_df.rename({'cluster':'cluster_predominante_15s'}, axis=1, inplace=True)
 	table = dash_table.DataTable(
                       mode_df.to_dict('records'),
                       [{"name": i, "id": i} for i in mode_df.columns],
@@ -329,7 +332,7 @@ def create_summary_info_from_section(clickData):
                       ],
                     )
 	
-	audio_html = lout.get_audio_controls([song_name], [part])
+	audio_html = lout.get_audio_controls_for_sections([song_name], [part], [section])
 	
 	ret_list = title + [table] + audio_html
 	return ret_list

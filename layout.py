@@ -99,6 +99,7 @@ def draw_controls_neural(df_reduced):
   aux_df = df_reduced.reset_index().copy()
   songs = aux_df['f'].drop_duplicates().values
   parts1 = aux_df.loc[aux_df['f'] == songs[0], 'part'].drop_duplicates().values
+  sections1 = aux_df.loc[(aux_df['f'] == songs[0]) & (aux_df['part'] == parts1[0]), 'p'].drop_duplicates().values
   songs_dropdown_neural = dcc.Dropdown(
               id='dropdown-songs-neural',
               options=[{'label': x, 'value': x} for x in songs],
@@ -113,9 +114,17 @@ def draw_controls_neural(df_reduced):
       multi=True,
       className='form-control form-control')
   
+  dropdown_section_neural = dcc.Dropdown(
+      id='dropdown-section-original',
+      options=[{'label': x, 'value': x} for x in sections1],
+      value='selecciona una cancion',
+      multi=True,
+      className='form-control form-control')
+  
   array_control_elements = {
     'drop_songs_neural': songs_dropdown_neural,
-    'drop_part_neural' : dropdown_part_neural
+    'drop_part_neural' : dropdown_part_neural,
+    'drop_section_neural': dropdown_section_neural
   }
 
   return array_control_elements
@@ -219,6 +228,40 @@ def get_audio_controls(songs_selected, parts_selected):
               )], width=4)
             ])
       html_response.append(row)
+  return html_response
+
+def get_audio_controls_for_sections(songs_selected, parts_selected, sections_selected):
+  
+  html_response = []
+  tmp = data.df_feats.reset_index().copy()
+  tmp.sort_values(by=['filename', 'part', 'section'], axis=0, inplace=True)
+  if songs_selected == None:
+    songs_selected = tmp.loc[:, 'filename'].drop_duplicates().values
+  if parts_selected == None:
+    parts_selected = tmp.loc[(tmp['filename'].isin(songs_selected)), 'part'].drop_duplicates().values
+  if sections_selected == None:
+    sections_selected = tmp.loc[(tmp['filename'].isin(songs_selected)) & (tmp['part'].isin(parts_selected)), 'section'].drop_duplicates().values
+  for song in songs_selected:
+    for part in parts_selected:
+      for section in sections_selected:
+        cluster = tmp.loc[(tmp['filename']==song) & (tmp['part']==part)& (tmp['section']==section), 'cluster'].values
+        if len(cluster) == 0:
+          continue
+        cluster = cluster[0]
+        song_part = f"{part}_{str(section)}.wav"
+        src_audio = f"assets/audio_section/{song[:-4]}/"
+        src_audio = f"{src_audio}{song_part}"
+        
+        row = dbc.Row([
+                dbc.Col([html.Span(f"{song[:-10]}.../{song_part}", className="song-name-string")], width=7),
+                dbc.Col([html.Span(cluster, className="song-name-cluster")], width=1),
+                dbc.Col([html.Audio(
+                        controls=True,
+                        src = urllib.parse.quote(src_audio),
+                        children=["Tu explorador no soporta audio"]
+                )], width=4)
+              ])
+        html_response.append(row)
   return html_response
 
 def get_table_detailed(songs_selected, parts_selected, id='1'):
@@ -424,18 +467,19 @@ def get_row_controls_and_scatter(list_clusters):
   return row_layout
   
 
-def get_row_of_cluster_titles(list_clusters):
+def get_row_of_cluster_titles(list_clusters, ret_only_list=False):
   list_cols = []
   for k in list_clusters:
     col = dbc.Col(children=[
       html.H2(f"K-{k}", className="text-center")
     ], width=12/len(list_clusters))
     list_cols.append(col)
-  
-  row_layout = dbc.Row(dbc.Row( children=list_cols , id='cluster-titles'))
+  if ret_only_list:
+    return list_cols
+  row_layout = dbc.Row( children=list_cols , id='cluster-titles')
   return row_layout
 
-def get_row_of_clasification_graph(list_clusters, is_mean=False):
+def get_row_of_clasification_graph(list_clusters, is_mean=False, ret_only_list=False):
   list_cols = []
   for k in list_clusters:
     name = 'activation_mean.jpg'
@@ -445,11 +489,12 @@ def get_row_of_clasification_graph(list_clusters, is_mean=False):
       html.Img(src=f'assets/analysis_spectograms/{k}/{name}', style={'width':'90%'})
     ], width=12/len(list_clusters))
     list_cols.append(col)
-  
+  if ret_only_list:
+    return list_cols
   row_layout = dbc.Row( children=list_cols, id='cluster-activation' )
   return row_layout
 
-def get_row_of_shap_figures(list_clusters):
+def get_row_of_shap_figures(list_clusters, ret_only_list=False):
   list_cols = []
   for k in list_clusters:
     name = 'shap_figure.jpg'
@@ -457,7 +502,8 @@ def get_row_of_shap_figures(list_clusters):
       html.Img(src=f'assets/analysis_spectograms/{k}/{name}', style={'width':'90%'})
     ], width=12/len(list_clusters))
     list_cols.append(col)
-  
+  if ret_only_list:
+    return list_cols
   row_layout = dbc.Row( children=list_cols,id='cluster-shap' )
   return row_layout
 
@@ -472,8 +518,12 @@ def get_row_controls_neural():
               controls_1['drop_songs_neural'] 
               ]),
               html.Div(className="form-group-row", children=[
-                html.Label("Seleccionar Secciones canción 1:", htmlFor="dropdown-part-neural"), 
+                html.Label("Seleccionar Partes canción 1:", htmlFor="dropdown-part-neural"), 
                 controls_1['drop_part_neural'] 
+              ]),
+              html.Div(className="form-group-row", children=[
+                html.Label("Seleccionar Secciones canción 1:", htmlFor="dropdown-section-neural"), 
+                controls_1['drop_section_neural'] 
               ]),
               html.Button('Actualizar gráfica', id='button-refresh-neural', className='btn btn-primary')    
             ]),
@@ -508,7 +558,7 @@ def get_row_controls_neural():
                                   )
                         , label="Discriminación clústers"),
                   dbc.Tab(get_audio_controls(controls['song_selection_1'], controls['parts_selection_1'][:1])
-                  , label="Sección(es) Audio", style={'max-height': '400px', 'overflow-y': 'auto'}, id="tabs-content-audio-neural")
+                  , label="Sección(es) Audio", style={'maxHeight': '400px', 'overflowY': 'auto'}, id="tabs-content-audio-neural")
                 ])
               ]), #close Div
 					])

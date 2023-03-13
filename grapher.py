@@ -172,7 +172,7 @@ class GraphData(object):
   def create_scatterpolar(self, data):
     df_centers = data.drop(['Unnamed: 0'], axis=1).copy()
     categories = df_centers.columns
-    categories = [ x for i, x in enumerate(categories) if (i%3)==0 ]
+    # categories = [ x for i, x in enumerate(categories) if (i%3)==0 ] #use all categories
     fig = go.Figure()
 
     for i in df_centers.index:
@@ -190,8 +190,11 @@ class GraphData(object):
           visible=True,
           range=[0, 1]
         )),
-      showlegend=True,
-      title= "Caracteristicas cluster"
+      margin=dict(
+        b=10,
+        t=10,
+      ),
+      showlegend=True
     )
 
     return fig
