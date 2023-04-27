@@ -2,7 +2,7 @@
 ## Proyecto de Grado Maestría
 
 ### Descripción
-Por realizar
+En este repositorio, se almacena el código relacionado con la extracción de características para el análisis de audio, también el proceso de modelado utilizando diferentes técnicas de clasificación. finalmente para el análisis de los resultados se expone un tablero de control en el cual se puede realizar un análisis exploratorio de los resultados. Tambien se incluye documento y presentación de resumen del proyecto.
 
 ### Configuración tablero de control
 
